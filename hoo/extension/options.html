@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hoo Extension Options</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 24px;
+        font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+        background: #f5f0e8;
+        color: #1a1a1a;
+      }
+      .card {
+        max-width: 560px;
+        padding: 20px;
+        border-radius: 14px;
+        background: #fff;
+        border: 1px solid rgba(165, 28, 48, 0.2);
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 24px;
+      }
+      p {
+        margin: 0 0 14px;
+        color: rgba(26, 26, 26, 0.75);
+      }
+      label {
+        display: block;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(26, 26, 26, 0.2);
+      }
+      button {
+        margin-top: 12px;
+        background: #a51c30;
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .status {
+        margin-top: 10px;
+        font-size: 13px;
+        color: rgba(26, 26, 26, 0.75);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Hoo Extension</h1>
+      <p>Paste your Supabase access token so LinkedIn saves can authenticate to Hoo.</p>
+      <label for="token">Supabase Access Token</label>
+      <input id="token" type="password" placeholder="eyJhbGciOi..." />
+      <button id="saveBtn">Save token</button>
+      <div id="status" class="status"></div>
+    </div>
+    <script src="options.js"></script>
+  </body>
+  </html>
+
