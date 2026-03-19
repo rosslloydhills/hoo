@@ -21,12 +21,14 @@ You must decide whether the user is:
 
 Available tools:
 - add_contact: use when user is describing someone they met and wants to save them.
+- update_contact: use when user provides new details about an existing contact (email, phone, role, company, etc.).
 - search_contacts: use when user asks who they know / where / company / industry / role style questions.
 - create_reminder: use when user asks to be reminded to follow up with someone on a date or timeframe.
 
 Rules:
 - Use tools when needed. Do not invent people.
 - For add_contact, extract: name, company, role, work_location, location_met, notes.
+- For update_contact, always provide contact_name and include only fields the user explicitly provided.
 - work_location means where they are based or work.
 - location_met means where the user met them.
 - When responding after tool results, be concise and readable.
@@ -68,6 +70,27 @@ const TOOLS = [
         limit: { type: 'number' }
       },
       required: [],
+      additionalProperties: false
+    }
+  },
+  {
+    name: 'update_contact',
+    description: 'Update an existing contact by name with new details such as email, phone, company, role, or notes.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        contact_name: { type: 'string' },
+        name: { type: 'string' },
+        company: { type: 'string' },
+        role: { type: 'string' },
+        work_location: { type: 'string' },
+        location_met: { type: 'string' },
+        notes: { type: 'string' },
+        email: { type: 'string' },
+        phone: { type: 'string' },
+        linkedin_url: { type: 'string' }
+      },
+      required: ['contact_name'],
       additionalProperties: false
     }
   },
@@ -204,7 +227,7 @@ export async function POST(req: Request) {
     }
     const userId = userData.user.id;
 
-    let action: 'add_contact' | 'search_contacts' | 'create_reminder' | 'none' = 'none';
+    let action: 'add_contact' | 'update_contact' | 'search_contacts' | 'create_reminder' | 'none' = 'none';
 
     const normalizedHistory = history
       .filter((h) => h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string')
@@ -347,6 +370,96 @@ export async function POST(req: Request) {
               type: 'tool_result',
               tool_use_id: toolUse.id,
               content: JSON.stringify({ ok: true, contact: data })
+            });
+          }
+        } else if (name === 'update_contact') {
+          action = 'update_contact';
+
+          const contactName = safeString(input.contact_name);
+          if (!contactName) {
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              content: JSON.stringify({ ok: false, error: 'Missing contact_name for update_contact.' })
+            });
+            continue;
+          }
+
+          const { data: matchedContact, error: matchError } = await supabase
+            .from('contacts')
+            .select('id,name')
+            .eq('user_id', userId)
+            .ilike('name', `%${contactName}%`)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (matchError || !matchedContact) {
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              content: JSON.stringify({
+                ok: false,
+                error: matchError?.message ?? `No contact found matching "${contactName}".`
+              })
+            });
+            continue;
+          }
+
+          const updatePayload: Record<string, string> = {};
+          const candidateMap: Array<[keyof typeof input, string]> = [
+            ['name', 'name'],
+            ['company', 'company'],
+            ['role', 'role'],
+            ['work_location', 'work_location'],
+            ['location_met', 'location_met'],
+            ['email', 'email'],
+            ['phone', 'phone'],
+            ['linkedin_url', 'linkedin_url']
+          ];
+
+          for (const [inputKey, dbKey] of candidateMap) {
+            const value = safeString(input[inputKey]);
+            if (value) updatePayload[dbKey] = value;
+          }
+
+          const notes = safeString(input.notes);
+          if (notes) updatePayload.origin_note = notes;
+
+          if (Object.keys(updatePayload).length === 0) {
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              content: JSON.stringify({
+                ok: false,
+                error: 'No updatable fields were provided.'
+              })
+            });
+            continue;
+          }
+
+          const { data: updatedContact, error: updateError } = await supabase
+            .from('contacts')
+            .update(updatePayload)
+            .eq('id', matchedContact.id)
+            .eq('user_id', userId)
+            .select('id,name,company,role,work_location,location_met,email,phone,linkedin_url,origin_note')
+            .single();
+
+          if (updateError) {
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              content: JSON.stringify({ ok: false, error: updateError.message })
+            });
+          } else {
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              content: JSON.stringify({
+                ok: true,
+                contact: updatedContact
+              })
             });
           }
         } else if (name === 'create_reminder') {

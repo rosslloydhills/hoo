@@ -133,7 +133,7 @@ export function DashboardChat({ onContactAdded }: DashboardChatProps) {
 
       const payload = (await res.json()) as {
         reply?: string;
-        action?: 'add_contact' | 'search_contacts' | 'create_reminder' | 'none';
+        action?: 'add_contact' | 'update_contact' | 'search_contacts' | 'create_reminder' | 'none';
       };
 
       setMessages((prev) => [
@@ -154,7 +154,7 @@ export function DashboardChat({ onContactAdded }: DashboardChatProps) {
         console.warn('Failed to persist assistant message', persistErr);
       }
 
-      if (payload.action === 'add_contact') onContactAdded?.();
+      if (payload.action === 'add_contact' || payload.action === 'update_contact') onContactAdded?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.');
       setMessages((prev) => [
