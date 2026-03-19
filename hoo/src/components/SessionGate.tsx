@@ -7,6 +7,7 @@ import { DashboardChat } from '@/components/DashboardChat';
 import { ReminderBubbles } from '@/components/ReminderBubbles';
 import { PeopleTab } from '@/components/PeopleTab';
 import { PlaceholderTab } from '@/components/PlaceholderTab';
+import { MapTab } from '@/components/MapTab';
 
 type TabId = 'chat' | 'people' | 'map' | 'insights';
 
@@ -77,7 +78,7 @@ export function SessionGate() {
 
       {activeTab === 'chat' ? <DashboardChat onContactAdded={() => setPeopleRefreshKey((v) => v + 1)} /> : null}
       {activeTab === 'people' ? <PeopleTab refreshKey={peopleRefreshKey} /> : null}
-      {activeTab === 'map' ? <PlaceholderTab title="Map" description="Map view is coming next phase." /> : null}
+      {activeTab === 'map' ? <MapTab /> : null}
       {activeTab === 'insights' ? (
         <PlaceholderTab title="Insights" description="Network insights dashboard is coming next phase." />
       ) : null}

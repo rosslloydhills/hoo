@@ -4,6 +4,10 @@ import { createClient } from '@supabase/supabase-js';
 type AssistBody = {
   message?: string;
   accessToken?: string;
+  userLocation?: {
+    lat?: number;
+    lng?: number;
+  };
   history?: Array<{
     role: 'user' | 'assistant';
     content: string;
@@ -23,12 +27,14 @@ Available tools:
 - add_contact: use when user is describing someone they met and wants to save them.
 - update_contact: use when user provides new details about an existing contact (email, phone, role, company, etc.).
 - search_contacts: use when user asks who they know / where / company / industry / role style questions.
+- search_by_location: use when user asks who they met in/near a specific place (for example: Boston, Cambridge).
 - create_reminder: use when user asks to be reminded to follow up with someone on a date or timeframe.
 
 Rules:
 - Use tools when needed. Do not invent people.
 - For add_contact, extract: name, company, role, work_location, location_met, notes.
 - For update_contact, always provide contact_name and include only fields the user explicitly provided.
+- For search_by_location, extract a place_name and radius_miles (default to 20 if not specified).
 - work_location means where they are based or work.
 - location_met means where the user met them.
 - When responding after tool results, be concise and readable.
@@ -70,6 +76,21 @@ const TOOLS = [
         limit: { type: 'number' }
       },
       required: [],
+      additionalProperties: false
+    }
+  },
+  {
+    name: 'search_by_location',
+    description:
+      'Search contacts by where they were met near a place name. Geocodes the place and finds contacts within a radius.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        place_name: { type: 'string' },
+        radius_miles: { type: 'number' },
+        limit: { type: 'number' }
+      },
+      required: ['place_name'],
       additionalProperties: false
     }
   },
@@ -117,9 +138,21 @@ function safeString(value: unknown) {
   return typeof value === 'string' ? value : '';
 }
 
+function readEnvSecret(name: string) {
+  const raw = process.env[name];
+  if (typeof raw !== 'string') return '';
+  // Guard against accidental whitespace/newlines in .env files.
+  return raw.trim();
+}
+
 function clampLimit(value: unknown, fallback = 8) {
   if (typeof value !== 'number' || Number.isNaN(value)) return fallback;
   return Math.max(1, Math.min(25, Math.floor(value)));
+}
+
+function clampRadiusMiles(value: unknown, fallback = 20) {
+  if (typeof value !== 'number' || Number.isNaN(value)) return fallback;
+  return Math.max(1, Math.min(100, value));
 }
 
 function firstText(content: any[]) {
@@ -133,6 +166,67 @@ function firstText(content: any[]) {
 function escapeOrValue(value: string) {
   // Keep PostgREST .or string stable.
   return value.replace(/,/g, ' ').trim();
+}
+
+function isValidLatitude(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= -90 && value <= 90;
+}
+
+function isValidLongitude(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= -180 && value <= 180;
+}
+
+function toRadians(deg: number) {
+  return (deg * Math.PI) / 180;
+}
+
+function distanceMiles(aLat: number, aLng: number, bLat: number, bLng: number) {
+  const earthRadiusMiles = 3958.8;
+  const dLat = toRadians(bLat - aLat);
+  const dLng = toRadians(bLng - aLng);
+  const lat1 = toRadians(aLat);
+  const lat2 = toRadians(bLat);
+
+  const hav =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(hav), Math.sqrt(1 - hav));
+  return earthRadiusMiles * c;
+}
+
+async function geocodePlaceWithOpenCage(placeName: string, apiKey: string) {
+  const normalizedKey = apiKey.trim();
+  if (!normalizedKey) {
+    throw new Error('Missing OPENCAGE_API_KEY.');
+  }
+
+  const url = new URL('https://api.opencagedata.com/geocode/v1/json');
+  url.searchParams.set('q', placeName);
+  url.searchParams.set('key', normalizedKey);
+  url.searchParams.set('limit', '1');
+  url.searchParams.set('no_annotations', '1');
+
+  const resp = await fetch(url.toString(), {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json'
+    }
+  });
+
+  const payload = await resp.json().catch(() => null);
+  if (!resp.ok) {
+    const detail = payload?.status?.message ?? 'OpenCage request failed.';
+    throw new Error(typeof detail === 'string' ? detail : 'OpenCage request failed.');
+  }
+
+  const first = Array.isArray(payload?.results) ? payload.results[0] : null;
+  const lat = first?.geometry?.lat;
+  const lng = first?.geometry?.lng;
+  if (!isValidLatitude(lat) || !isValidLongitude(lng)) {
+    throw new Error(`Could not geocode "${placeName}".`);
+  }
+
+  return { lat, lng };
 }
 
 function startOfLocalDay(date = new Date()) {
@@ -199,10 +293,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing access token.' }, { status: 401 });
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = readEnvSecret('ANTHROPIC_API_KEY');
     if (!apiKey) {
       return NextResponse.json({ error: 'Missing ANTHROPIC_API_KEY.' }, { status: 500 });
     }
+    const openCageApiKey = readEnvSecret('OPENCAGE_API_KEY');
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -227,7 +322,8 @@ export async function POST(req: Request) {
     }
     const userId = userData.user.id;
 
-    let action: 'add_contact' | 'update_contact' | 'search_contacts' | 'create_reminder' | 'none' = 'none';
+    let action: 'add_contact' | 'update_contact' | 'search_contacts' | 'search_by_location' | 'create_reminder' | 'none' =
+      'none';
 
     const normalizedHistory = history
       .filter((h) => h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string')
@@ -340,8 +436,90 @@ export async function POST(req: Request) {
               content: JSON.stringify({ ok: true, count: data?.length ?? 0, results: data ?? [] })
             });
           }
+        } else if (name === 'search_by_location') {
+          action = 'search_by_location';
+
+          const placeName = safeString(input.place_name);
+          const radiusMiles = clampRadiusMiles(input.radius_miles, 20);
+          const limit = clampLimit(input.limit, 10);
+
+          if (!placeName) {
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              content: JSON.stringify({ ok: false, error: 'Missing place_name for search_by_location.' })
+            });
+            continue;
+          }
+          if (!openCageApiKey) {
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              content: JSON.stringify({ ok: false, error: 'Missing OPENCAGE_API_KEY.' })
+            });
+            continue;
+          }
+
+          try {
+            const center = await geocodePlaceWithOpenCage(placeName, openCageApiKey);
+            const { data, error } = await supabase
+              .from('contacts')
+              .select('id,name,company,role,work_location,location_met,origin_note,location_lat,location_lng,created_at')
+              .eq('user_id', userId)
+              .not('location_lat', 'is', null)
+              .not('location_lng', 'is', null)
+              .limit(500);
+
+            if (error) {
+              toolResults.push({
+                type: 'tool_result',
+                tool_use_id: toolUse.id,
+                content: JSON.stringify({ ok: false, error: error.message })
+              });
+              continue;
+            }
+
+            const withDistance = (data ?? [])
+              .map((row) => {
+                const lat = Number(row.location_lat);
+                const lng = Number(row.location_lng);
+                if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+                const distance = distanceMiles(center.lat, center.lng, lat, lng);
+                return { ...row, distance_miles: Number(distance.toFixed(2)) };
+              })
+              .filter((row): row is NonNullable<typeof row> => row !== null)
+              .filter((row) => row.distance_miles <= radiusMiles)
+              .sort((a, b) => a.distance_miles - b.distance_miles)
+              .slice(0, limit);
+
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              content: JSON.stringify({
+                ok: true,
+                place_name: placeName,
+                center,
+                radius_miles: radiusMiles,
+                count: withDistance.length,
+                results: withDistance
+              })
+            });
+          } catch (err) {
+            toolResults.push({
+              type: 'tool_result',
+              tool_use_id: toolUse.id,
+              content: JSON.stringify({
+                ok: false,
+                error: err instanceof Error ? err.message : 'Failed to geocode location.'
+              })
+            });
+          }
         } else if (name === 'add_contact') {
           action = 'add_contact';
+
+          const locationLat = body?.userLocation?.lat;
+          const locationLng = body?.userLocation?.lng;
+          const hasValidLocation = isValidLatitude(locationLat) && isValidLongitude(locationLng);
 
           const insertPayload = {
             user_id: userId,
@@ -350,13 +528,15 @@ export async function POST(req: Request) {
             role: safeString(input.role),
             work_location: safeString(input.work_location),
             location_met: safeString(input.location_met),
-            origin_note: safeString(input.notes)
+            origin_note: safeString(input.notes),
+            location_lat: hasValidLocation ? locationLat : null,
+            location_lng: hasValidLocation ? locationLng : null
           };
 
           const { data, error } = await supabase
             .from('contacts')
             .insert(insertPayload)
-            .select('id,name,company,role,work_location,location_met,origin_note')
+            .select('id,name,company,role,work_location,location_met,origin_note,location_lat,location_lng')
             .single();
 
           if (error) {

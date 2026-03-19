@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import 'leaflet/dist/leaflet.css';
 import React from 'react';
 import { Inter, Playfair_Display } from 'next/font/google';
 

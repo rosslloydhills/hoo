@@ -10,6 +10,11 @@ type ChatMessage = {
   content: string;
 };
 
+type UserLocation = {
+  lat: number;
+  lng: number;
+};
+
 type DashboardChatProps = {
   onContactAdded?: () => void;
 };
@@ -22,8 +27,36 @@ export function DashboardChat({ onContactAdded }: DashboardChatProps) {
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
+  const [locationAttempted, setLocationAttempted] = useState(false);
 
   const historyRef = useRef<HTMLDivElement | null>(null);
+
+  async function getCurrentLocationIfNeeded() {
+    if (userLocation || locationAttempted) return userLocation;
+    setLocationAttempted(true);
+
+    if (typeof window === 'undefined' || !('geolocation' in navigator)) return null;
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 8000,
+          maximumAge: 5 * 60 * 1000
+        });
+      });
+
+      const coords: UserLocation = {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      };
+      setUserLocation(coords);
+      return coords;
+    } catch {
+      return null;
+    }
+  }
 
   async function refreshMessages(id: string) {
     const { data, error } = await supabase
@@ -107,6 +140,7 @@ export function DashboardChat({ onContactAdded }: DashboardChatProps) {
 
     setSending(true);
     try {
+      const latestLocation = await getCurrentLocationIfNeeded();
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) {
@@ -122,6 +156,7 @@ export function DashboardChat({ onContactAdded }: DashboardChatProps) {
             role: m.role,
             content: m.content
           })),
+          userLocation: latestLocation,
           accessToken
         })
       });
@@ -133,7 +168,7 @@ export function DashboardChat({ onContactAdded }: DashboardChatProps) {
 
       const payload = (await res.json()) as {
         reply?: string;
-        action?: 'add_contact' | 'update_contact' | 'search_contacts' | 'create_reminder' | 'none';
+        action?: 'add_contact' | 'update_contact' | 'search_contacts' | 'search_by_location' | 'create_reminder' | 'none';
       };
 
       setMessages((prev) => [

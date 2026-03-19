@@ -778,3 +778,105 @@ a {
   font-size: 16px;
 }
 
+.hoo-mapSwitch {
+  display: inline-flex;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(165, 28, 48, 0.14);
+  margin-bottom: 14px;
+}
+
+.hoo-mapSwitchBtn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: rgba(26, 26, 26, 0.8);
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.hoo-mapSwitchBtn.is-active {
+  background: var(--crimson);
+  color: #fff;
+  box-shadow:
+    0 10px 24px rgba(165, 28, 48, 0.28),
+    0 1px 0 rgba(255, 255, 255, 0.22) inset;
+}
+
+.hoo-mapCard {
+  padding: 14px;
+}
+
+.hoo-mapMetaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 10px;
+}
+
+.hoo-mapLegendChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(165, 28, 48, 0.15);
+  color: rgba(26, 26, 26, 0.82);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.hoo-mapLegendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #a51c30;
+  box-shadow: 0 0 0 3px rgba(165, 28, 48, 0.18);
+}
+
+.hoo-mapCountBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(165, 28, 48, 0.15);
+  color: rgba(26, 26, 26, 0.72);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.hoo-mapEmpty {
+  min-height: 420px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: rgba(26, 26, 26, 0.74);
+  font-size: 15px;
+  padding: 20px;
+}
+
+.hoo-leafletMap {
+  width: 100%;
+  height: min(66vh, 560px);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.hoo-mapTooltipName {
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.hoo-mapTooltipMeta {
+  font-size: 12px;
+  opacity: 0.86;
+}
+
