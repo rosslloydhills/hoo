@@ -56,8 +56,12 @@ export function SessionGate() {
     <div className="hoo-dashboardWrap hoo-dashboardWithNav">
       <div className="hoo-dashboardHeader">
         <div className="hoo-brandLogo" aria-label="HOO">
-          H<span className="hoo-logoOo">O</span>
-          <span className="hoo-logoOo hoo-logoOoAlt">O</span>
+          H
+          <span className="hoo-logoGlasses" aria-hidden>
+            <span className="hoo-logoOo">O</span>
+            <span className="hoo-logoBridge" />
+            <span className="hoo-logoOo hoo-logoOoAlt">O</span>
+          </span>
         </div>
         <button
           className="hoo-ghostBtn"
@@ -80,26 +84,34 @@ export function SessionGate() {
 
       <nav className="hoo-bottomNav" aria-label="Primary navigation">
         <button className={`hoo-navItem ${activeTab === 'chat' ? 'is-active' : ''}`} onClick={() => setActiveTab('chat')}>
-          <span className="hoo-navIcon">💬</span>
-          <span className="hoo-navLabel">Chat</span>
+          <span className="hoo-navPill">
+            <span className="hoo-navGlyph hoo-navGlyphChat" aria-hidden />
+            <span className="hoo-navLabel">Chat</span>
+          </span>
         </button>
         <button
           className={`hoo-navItem ${activeTab === 'people' ? 'is-active' : ''}`}
           onClick={() => setActiveTab('people')}
         >
-          <span className="hoo-navIcon">👥</span>
-          <span className="hoo-navLabel">People</span>
+          <span className="hoo-navPill">
+            <span className="hoo-navGlyph hoo-navGlyphPeople" aria-hidden />
+            <span className="hoo-navLabel">People</span>
+          </span>
         </button>
         <button className={`hoo-navItem ${activeTab === 'map' ? 'is-active' : ''}`} onClick={() => setActiveTab('map')}>
-          <span className="hoo-navIcon">🗺️</span>
-          <span className="hoo-navLabel">Map</span>
+          <span className="hoo-navPill">
+            <span className="hoo-navGlyph hoo-navGlyphMap" aria-hidden />
+            <span className="hoo-navLabel">Map</span>
+          </span>
         </button>
         <button
           className={`hoo-navItem ${activeTab === 'insights' ? 'is-active' : ''}`}
           onClick={() => setActiveTab('insights')}
         >
-          <span className="hoo-navIcon">📈</span>
-          <span className="hoo-navLabel">Insights</span>
+          <span className="hoo-navPill">
+            <span className="hoo-navGlyph hoo-navGlyphInsights" aria-hidden />
+            <span className="hoo-navLabel">Insights</span>
+          </span>
         </button>
       </nav>
 

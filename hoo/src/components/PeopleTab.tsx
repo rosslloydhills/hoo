@@ -48,6 +48,11 @@ export function PeopleTab({ refreshKey = 0 }: PeopleTabProps) {
     };
   }, [supabase, refreshKey]);
 
+  const initialFor = (name: string | null) => {
+    const t = (name ?? '').trim();
+    return t ? t[0].toUpperCase() : '?';
+  };
+
   return (
     <div className="hoo-tabPage">
       <div className="hoo-sectionTitle">People</div>
@@ -59,14 +64,21 @@ export function PeopleTab({ refreshKey = 0 }: PeopleTabProps) {
         <ul className="hoo-peopleGrid">
           {contacts.map((c) => (
             <li key={c.id} className="hoo-contactItem hoo-card">
-              <div className="hoo-contactName">{c.name || 'Unnamed'}</div>
-              <div className="hoo-contactMeta">
-                {c.company ? c.company : null}
-                {c.company && c.role ? ' · ' : null}
-                {c.role ? c.role : null}
+              <div className="hoo-contactRow">
+                <div className="hoo-contactAvatar" aria-hidden>
+                  {initialFor(c.name)}
+                </div>
+                <div className="hoo-contactBody">
+                  <div className="hoo-contactName">{c.name || 'Unnamed'}</div>
+                  <div className="hoo-contactMeta">
+                    {c.company ? c.company : null}
+                    {c.company && c.role ? ' · ' : null}
+                    {c.role ? c.role : null}
+                  </div>
+                  {c.work_location ? <div className="hoo-contactSub">Based in {c.work_location}</div> : null}
+                  {c.location_met ? <div className="hoo-contactSub">Met in {c.location_met}</div> : null}
+                </div>
               </div>
-              {c.work_location ? <div className="hoo-contactSub">Based in {c.work_location}</div> : null}
-              {c.location_met ? <div className="hoo-contactSub">Met in {c.location_met}</div> : null}
             </li>
           ))}
         </ul>

@@ -200,7 +200,13 @@ export function DashboardChat({ onContactAdded }: DashboardChatProps) {
               key={m.id}
               className={m.role === 'user' ? 'hoo-messageRow hoo-messageRowUser' : 'hoo-messageRow'}
             >
-              <div className={m.role === 'user' ? 'hoo-messageBubble hoo-messageBubbleUser' : 'hoo-messageBubble'}>
+              <div
+                className={
+                  m.role === 'user'
+                    ? 'hoo-messageBubble hoo-messageBubbleUser'
+                    : 'hoo-messageBubble hoo-messageBubbleAssistant'
+                }
+              >
                 {m.role === 'assistant' ? <ReactMarkdown>{m.content}</ReactMarkdown> : m.content}
               </div>
             </div>
