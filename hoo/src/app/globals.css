@@ -1,0 +1,601 @@
+:root {
+  --cream: #f5f0e8;
+  --crimson: #a51c30;
+  --gold: #c9a84c;
+  --charcoal: #1a1a1a;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--charcoal);
+  font-family: var(--font-inter), system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+input,
+button,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Shared UI bits */
+.hoo-input {
+  width: 100%;
+  padding: 14px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(165, 28, 48, 0.18);
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 1px 0 rgba(165, 28, 48, 0.07) inset,
+    0 10px 26px rgba(0, 0, 0, 0.04);
+  outline: none;
+}
+
+.hoo-input:focus {
+  border-color: rgba(165, 28, 48, 0.45);
+  box-shadow:
+    0 0 0 4px rgba(165, 28, 48, 0.14),
+    0 10px 26px rgba(0, 0, 0, 0.04);
+}
+
+.hoo-btn {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(165, 28, 48, 0.35);
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  background: linear-gradient(180deg, #b52033 0%, #8e0f1d 100%);
+  box-shadow:
+    0 14px 32px rgba(165, 28, 48, 0.22),
+    0 2px 0 rgba(255, 255, 255, 0.25) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+.hoo-btn::after {
+  content: '';
+  position: absolute;
+  inset: -40px -60px auto -60px;
+  height: 120px;
+  transform: rotate(-10deg);
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 60%);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.hoo-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+  box-shadow: none;
+}
+
+.hoo-card {
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(165, 28, 48, 0.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.12),
+    0 2px 0 rgba(255, 255, 255, 0.35) inset;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hoo-btn::after {
+    display: none;
+  }
+}
+
+/* Login cursor glow root */
+.hoo-glowRoot {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  --glow-x: 50vw;
+  --glow-y: 22vh;
+}
+
+.hoo-glowRoot::before {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(
+    circle at var(--glow-x) var(--glow-y),
+    rgba(165, 28, 48, 0.28) 0%,
+    rgba(165, 28, 48, 0.14) 16%,
+    rgba(165, 28, 48, 0.0) 52%
+  );
+  filter: blur(16px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hoo-glowRoot::after {
+  /* subtle dot grid like the mock */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+  background-size: 16px 16px;
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hoo-glowRoot > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hoo-loginShell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px 16px;
+}
+
+.hoo-loginPanel {
+  width: 100%;
+  max-width: 420px;
+  padding: 22px;
+}
+
+.hoo-loginTitle {
+  font-family: var(--font-playfair), Georgia, 'Times New Roman', serif;
+  font-size: 44px;
+  line-height: 1.05;
+  font-weight: 700;
+  margin: 6px 0 18px;
+}
+
+.hoo-label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(26, 26, 26, 0.65);
+  margin: 0 0 8px;
+}
+
+.hoo-field {
+  margin: 0 0 14px;
+}
+
+.hoo-error {
+  margin: 10px 0 0;
+  color: rgba(165, 28, 48, 0.95);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.hoo-loginHint {
+  margin-top: 14px;
+  font-size: 13px;
+  color: rgba(26, 26, 26, 0.62);
+}
+
+/* Dashboard */
+.hoo-dashboardWrap {
+  padding: 24px 16px;
+  min-height: 100vh;
+}
+
+.hoo-dashboardWithNav {
+  padding-bottom: 110px;
+}
+
+.hoo-dashboardHeader {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.hoo-dashboardTitle {
+  font-family: var(--font-playfair), Georgia, 'Times New Roman', serif;
+  font-size: 34px;
+  font-weight: 700;
+}
+
+.hoo-brandLogo {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--charcoal);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.hoo-logoOo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 1px;
+  border-radius: 999px;
+  border: 2px solid var(--crimson);
+  color: transparent;
+  position: relative;
+}
+
+.hoo-logoOo::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(165, 28, 48, 0.55);
+}
+
+.hoo-logoOoAlt {
+  border-color: var(--gold);
+}
+
+.hoo-logoOoAlt::after {
+  background: rgba(201, 168, 76, 0.6);
+}
+
+.hoo-dashboardCenter {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.hoo-tabPage {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.hoo-chatPage {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.hoo-ghostBtn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid rgba(165, 28, 48, 0.35);
+  color: rgba(165, 28, 48, 0.95);
+  font-weight: 900;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.hoo-ghostBtn:hover {
+  background: rgba(165, 28, 48, 0.06);
+}
+
+.hoo-chatCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: calc(100vh - 220px);
+  min-height: 420px;
+}
+
+.hoo-chatHeader {
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(165, 28, 48, 0.12);
+}
+
+.hoo-chatHeaderTitle {
+  font-family: var(--font-playfair), Georgia, 'Times New Roman', serif;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.hoo-chatHeaderSubtitle {
+  margin-top: 6px;
+  font-size: 13px;
+  color: rgba(26, 26, 26, 0.65);
+}
+
+.hoo-chatHistory {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px;
+}
+
+.hoo-chatEmpty {
+  opacity: 0.7;
+  color: rgba(26, 26, 26, 0.8);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.hoo-chatComposer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 18px;
+  border-top: 1px solid rgba(165, 28, 48, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+}
+
+.hoo-chatInput {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(165, 28, 48, 0.18);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 1px 0 rgba(165, 28, 48, 0.07) inset,
+    0 10px 26px rgba(0, 0, 0, 0.04);
+  outline: none;
+}
+
+.hoo-chatInput:focus {
+  border-color: rgba(165, 28, 48, 0.45);
+  box-shadow:
+    0 0 0 4px rgba(165, 28, 48, 0.14),
+    0 10px 26px rgba(0, 0, 0, 0.04);
+}
+
+.hoo-sendBtn {
+  flex: 0 0 auto;
+  padding: 12px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(165, 28, 48, 0.35);
+  color: #fff;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  background: linear-gradient(180deg, #b52033 0%, #8e0f1d 100%);
+  box-shadow:
+    0 14px 32px rgba(165, 28, 48, 0.22),
+    0 2px 0 rgba(255, 255, 255, 0.25) inset;
+}
+
+.hoo-sendBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+  box-shadow: none;
+}
+
+.hoo-messageRow {
+  display: flex;
+  margin: 8px 0;
+}
+
+.hoo-messageRowUser {
+  justify-content: flex-end;
+}
+
+.hoo-messageBubble {
+  max-width: 78%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(165, 28, 48, 0.12);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.04);
+  line-height: 1.35;
+}
+
+.hoo-messageBubbleUser {
+  background: rgba(165, 28, 48, 0.12);
+  border-color: rgba(165, 28, 48, 0.25);
+}
+
+.hoo-contactsSection {
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(165, 28, 48, 0.14);
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 28px 70px rgba(0, 0, 0, 0.12),
+    0 2px 0 rgba(255, 255, 255, 0.35) inset;
+}
+
+.hoo-sectionTitle {
+  font-family: var(--font-playfair), Georgia, 'Times New Roman', serif;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.hoo-peopleGrid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.hoo-contactsEmpty {
+  opacity: 0.7;
+  color: rgba(26, 26, 26, 0.8);
+}
+
+.hoo-contactsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hoo-contactItem {
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(165, 28, 48, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.35) inset;
+}
+
+.hoo-contactName {
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.hoo-contactMeta {
+  font-size: 13px;
+  color: rgba(26, 26, 26, 0.75);
+  margin-bottom: 4px;
+}
+
+.hoo-contactSub {
+  font-size: 12px;
+  color: rgba(26, 26, 26, 0.62);
+}
+
+.hoo-reminderStack {
+  position: fixed;
+  right: 18px;
+  bottom: 94px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 360px;
+}
+
+.hoo-reminderBubble {
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(165, 28, 48, 0.24);
+  border-left: 4px solid var(--crimson);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.14),
+    0 1px 0 rgba(255, 255, 255, 0.35) inset;
+}
+
+.hoo-reminderTitle {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 900;
+  color: rgba(165, 28, 48, 0.92);
+}
+
+.hoo-reminderContact {
+  margin-top: 4px;
+  font-weight: 900;
+  color: rgba(26, 26, 26, 0.95);
+}
+
+.hoo-reminderDue {
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(26, 26, 26, 0.62);
+}
+
+.hoo-reminderText {
+  margin-top: 4px;
+  font-size: 13px;
+  color: rgba(26, 26, 26, 0.82);
+}
+
+.hoo-reminderActions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.hoo-reminderSnooze {
+  appearance: none;
+  border: none;
+  border-radius: 10px;
+  background: rgba(26, 26, 26, 0.08);
+  color: rgba(26, 26, 26, 0.88);
+  padding: 8px 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.hoo-reminderDismiss {
+  appearance: none;
+  border: none;
+  border-radius: 10px;
+  background: rgba(165, 28, 48, 0.12);
+  color: rgba(165, 28, 48, 0.95);
+  padding: 8px 10px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.hoo-bottomNav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 12px;
+  width: min(560px, calc(100% - 20px));
+  border-radius: 18px;
+  border: 1px solid rgba(165, 28, 48, 0.18);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.16),
+    0 1px 0 rgba(255, 255, 255, 0.45) inset;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  z-index: 50;
+}
+
+.hoo-navItem {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 10px 6px 9px;
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  cursor: pointer;
+  color: rgba(26, 26, 26, 0.72);
+}
+
+.hoo-navItem.is-active {
+  color: var(--crimson);
+}
+
+.hoo-navIcon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.hoo-navLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.hoo-placeholderCard {
+  padding: 20px;
+  color: rgba(26, 26, 26, 0.75);
+}
+
