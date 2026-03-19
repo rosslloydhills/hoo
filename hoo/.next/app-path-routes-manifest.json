@@ -1,8 +1,0 @@
-{
-  "/_global-error/page": "/_global-error",
-  "/_not-found/page": "/_not-found",
-  "/api/anthropic/extract/route": "/api/anthropic/extract",
-  "/api/chat/assist/route": "/api/chat/assist",
-  "/login/page": "/login",
-  "/page": "/"
-}
