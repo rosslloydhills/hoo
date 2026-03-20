@@ -3,7 +3,7 @@
   "name": "Hoo LinkedIn Saver",
   "version": "1.0.0",
   "description": "Scrape LinkedIn profiles and save to Hoo.",
-  "permissions": ["storage"],
+  "permissions": [],
   "host_permissions": ["https://www.linkedin.com/*", "https://hoopeople.vercel.app/*"],
   "background": {
     "service_worker": "background.js"
@@ -14,7 +14,6 @@
       "js": ["content.js"],
       "run_at": "document_idle"
     }
-  ],
-  "options_page": "options.html"
+  ]
 }
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 type LinkedInProfilePayload = {
+  extension_secret?: string;
   profile_url?: string;
   name?: string;
   headline?: string;
@@ -16,12 +17,6 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
-
-function readBearerToken(req: Request) {
-  const auth = req.headers.get('authorization') ?? req.headers.get('Authorization') ?? '';
-  if (!auth.toLowerCase().startsWith('bearer ')) return '';
-  return auth.slice(7).trim();
-}
 
 function safeString(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
@@ -59,12 +54,16 @@ export async function OPTIONS() {
 
 export async function POST(req: Request) {
   try {
-    const accessToken = readBearerToken(req);
-    if (!accessToken) {
-      return NextResponse.json({ error: 'Missing bearer token.' }, { status: 401, headers: CORS_HEADERS });
+    const body = (await req.json().catch(() => null)) as LinkedInProfilePayload | null;
+    const extensionSecret = safeString(body?.extension_secret);
+    const expectedSecret = safeString(process.env.EXTENSION_SECRET);
+    if (!expectedSecret) {
+      return NextResponse.json({ error: 'Missing EXTENSION_SECRET env var.' }, { status: 500, headers: CORS_HEADERS });
+    }
+    if (!extensionSecret || extensionSecret !== expectedSecret) {
+      return NextResponse.json({ error: 'Invalid extension secret.' }, { status: 401, headers: CORS_HEADERS });
     }
 
-    const body = (await req.json().catch(() => null)) as LinkedInProfilePayload | null;
     const name = safeString(body?.name);
     const headline = safeString(body?.headline);
     const currentCompany = safeString(body?.current_company);
@@ -78,25 +77,20 @@ export async function POST(req: Request) {
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseAnonKey) {
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const extensionUserId = safeString(process.env.EXTENSION_USER_ID);
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
       return NextResponse.json(
-        { error: 'Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY.' },
+        { error: 'Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.' },
         { status: 500, headers: CORS_HEADERS }
       );
     }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      }
-    });
-
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError || !userData.user) {
-      return NextResponse.json({ error: 'Invalid session.' }, { status: 401, headers: CORS_HEADERS });
+    if (!extensionUserId) {
+      return NextResponse.json({ error: 'Missing EXTENSION_USER_ID env var.' }, { status: 500, headers: CORS_HEADERS });
     }
-    const userId = userData.user.id;
+
+    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+    const userId = extensionUserId;
 
     const { data: existingContact } = await supabase
       .from('contacts')
