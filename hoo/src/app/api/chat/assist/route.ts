@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { contentForChatModel } from '@/lib/linkedinSearch';
 
 type AssistBody = {
   message?: string;
@@ -40,6 +41,7 @@ Rules:
 - When responding after tool results, be concise and readable.
 - For search results, return a short summary and a clear list of matches.
 - For reminders, extract a specific due_date and contact_name when possible.
+- After saving a new contact without a LinkedIn URL, keep your reply concise; the app may append a LinkedIn lookup prompt for the user.
 `;
 
 const TOOLS = [
@@ -162,6 +164,13 @@ function firstText(content: any[]) {
     .join('\n')
     .trim();
 }
+
+type LinkedInSearchPrompt = {
+  contactId: string;
+  name: string;
+  company: string;
+  role: string;
+};
 
 function escapeOrValue(value: string) {
   // Keep PostgREST .or string stable.
@@ -327,7 +336,10 @@ export async function POST(req: Request) {
 
     const normalizedHistory = history
       .filter((h) => h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string')
-      .map((h) => ({ role: h.role, content: h.content.trim() }))
+      .map((h) => ({
+        role: h.role,
+        content: contentForChatModel(h.role, h.content.trim())
+      }))
       .filter((h) => h.content.length > 0);
 
     // Anthropic conversations should start with a user message.
@@ -339,6 +351,8 @@ export async function POST(req: Request) {
       role: h.role,
       content: h.content
     }));
+
+    let linkedinSearchPrompt: LinkedInSearchPrompt | null = null;
 
     if (messages.length === 0 && userMessage) {
       messages = [{ role: 'user', content: userMessage }];
@@ -383,8 +397,12 @@ export async function POST(req: Request) {
 
       const toolUses = content.filter((c: any) => c?.type === 'tool_use');
       if (toolUses.length === 0) {
-        const reply = firstText(content);
-        return NextResponse.json({ reply: reply || 'Done.', action });
+        const reply = firstText(content) || 'Done.';
+        return NextResponse.json({
+          reply,
+          action,
+          linkedinSearchPrompt: linkedinSearchPrompt ?? undefined
+        });
       }
 
       messages.push({ role: 'assistant', content });
@@ -536,7 +554,7 @@ export async function POST(req: Request) {
           const { data, error } = await supabase
             .from('contacts')
             .insert(insertPayload)
-            .select('id,name,company,role,work_location,location_met,origin_note,location_lat,location_lng')
+            .select('id,name,company,role,work_location,location_met,origin_note,location_lat,location_lng,linkedin_url')
             .single();
 
           if (error) {
@@ -546,6 +564,16 @@ export async function POST(req: Request) {
               content: JSON.stringify({ ok: false, error: error.message })
             });
           } else {
+            const url = data?.linkedin_url;
+            const hasLinkedIn = typeof url === 'string' && url.trim().length > 0;
+            if (data?.id && !hasLinkedIn) {
+              linkedinSearchPrompt = {
+                contactId: data.id,
+                name: safeString(data.name),
+                company: safeString(data.company),
+                role: safeString(data.role)
+              };
+            }
             toolResults.push({
               type: 'tool_result',
               tool_use_id: toolUse.id,

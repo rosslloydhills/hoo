@@ -54,6 +54,21 @@ function fallbackNameFromTitle() {
   return candidate;
 }
 
+function parseCompanyFromHeadline(headline) {
+  if (!headline) return '';
+
+  // Common forms:
+  // "Product Manager at Acme"
+  // "Designer @ Acme"
+  const atMatch = headline.match(/\bat\s+(.+)$/i);
+  if (atMatch?.[1]) return atMatch[1].trim();
+
+  const atSymbolMatch = headline.match(/@\s*([^|,•]+)/);
+  if (atSymbolMatch?.[1]) return atSymbolMatch[1].trim();
+
+  return '';
+}
+
 async function waitForNameWithRetry(maxWaitMs = 10000, stepMs = 1000) {
   const attempts = Math.max(1, Math.floor(maxWaitMs / stepMs));
   for (let i = 0; i < attempts; i += 1) {
@@ -121,20 +136,34 @@ function showToast(message, isError = false) {
 async function scrapeLinkedInProfile() {
   const profileUrl = window.location.href.split('?')[0];
   const name = await waitForNameWithRetry(10000, 1000);
+  const topSection =
+    document.querySelector('main section') ||
+    document.querySelector('.pv-top-card') ||
+    document.querySelector('[data-view-name="profile-card"]') ||
+    document.querySelector('main');
+
+  console.log('[Hoo Extension] top profile section text dump', {
+    text: (topSection?.textContent || '').replace(/\s+/g, ' ').trim()
+  });
 
   const headline = firstTextBySelectors([
+    'h2.text-body-medium',
+    'div[data-generated-suggestion-target]',
+    'main section span[aria-hidden="true"]',
     '.text-body-medium.break-words',
     '.pv-text-details__left-panel .text-body-medium',
     '.artdeco-entity-lockup__subtitle',
     'section .text-body-medium'
   ]);
 
-  const location = firstTextBySelectors([
-    '.text-body-small.inline.t-black--light.break-words',
-    '.pv-text-details__left-panel .text-body-small',
-    '.artdeco-entity-lockup__caption',
-    'section .text-body-small'
-  ]);
+  const locationCandidates = [
+    ...document.querySelectorAll('span.text-body-small'),
+    ...document.querySelectorAll('.pv-text-details__left-panel .text-body-small'),
+    ...document.querySelectorAll('.artdeco-entity-lockup__caption')
+  ]
+    .map((el) => textFrom(el))
+    .filter(Boolean);
+  const location = locationCandidates.find((value) => /,/.test(value) || /\b[A-Za-z]{3,}\b/.test(value)) || '';
 
   const experienceTextsRaw = collectVisibleTextsFromSelectors([
     '.experience-section li span[aria-hidden="true"]',
@@ -154,13 +183,7 @@ async function scrapeLinkedInProfile() {
   ]);
   const education = normalizeListEntries(educationRaw, 8);
 
-  const currentCompany =
-    firstTextBySelectors([
-      '#experience li span[aria-hidden="true"]',
-      '.experience-section li span[aria-hidden="true"]',
-      '.pvs-list__container li span[aria-hidden="true"]',
-      '.pvs-list li span[aria-hidden="true"]'
-    ]) || experienceTexts[0] || '';
+  const currentCompany = parseCompanyFromHeadline(headline) || experienceTexts[0] || '';
 
   const scraped = {
     profile_url: profileUrl,

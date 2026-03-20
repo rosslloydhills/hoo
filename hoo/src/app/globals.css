@@ -303,6 +303,75 @@ a {
   margin: 0 auto;
 }
 
+.hoo-chatLinkedinBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(201, 168, 76, 0.55);
+  background: linear-gradient(135deg, rgba(255, 252, 245, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%);
+  box-shadow:
+    0 12px 28px rgba(17, 11, 8, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
+}
+
+.hoo-chatLinkedinBannerText {
+  flex: 1;
+  min-width: 200px;
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(26, 26, 26, 0.9);
+  line-height: 1.4;
+}
+
+.hoo-chatLinkedinBannerActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.hoo-chatLinkedinBannerFindBtn {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(180deg, #b52033 0%, #8e0f1d 100%);
+  box-shadow: 0 8px 20px rgba(165, 28, 48, 0.25);
+}
+
+.hoo-chatLinkedinBannerFindBtn:hover {
+  filter: brightness(1.05);
+}
+
+.hoo-chatLinkedinBannerDismissBtn {
+  appearance: none;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  color: rgba(26, 26, 26, 0.55);
+  background: rgba(26, 26, 26, 0.06);
+  display: grid;
+  place-items: center;
+}
+
+.hoo-chatLinkedinBannerDismissBtn:hover {
+  background: rgba(26, 26, 26, 0.1);
+  color: rgba(26, 26, 26, 0.85);
+}
+
 .hoo-ghostBtn {
   appearance: none;
   background: transparent;
@@ -474,6 +543,105 @@ a {
   font-size: 34px;
   font-weight: 800;
   margin-bottom: 18px;
+}
+
+.hoo-peopleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.hoo-peopleHeader .hoo-sectionTitle {
+  margin-bottom: 0;
+}
+
+.hoo-findLinkedInBulkBtn {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(180deg, #b52033 0%, #8e0f1d 100%);
+  box-shadow:
+    0 10px 24px rgba(165, 28, 48, 0.28),
+    0 1px 0 rgba(255, 255, 255, 0.2) inset;
+}
+
+.hoo-findLinkedInBulkBtn:hover {
+  filter: brightness(1.05);
+}
+
+.hoo-linkedinPrompt {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(165, 28, 48, 0.12);
+}
+
+.hoo-linkedinPromptLine {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(26, 26, 26, 0.88);
+}
+
+.hoo-linkedinPromptBtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.hoo-linkedinPromptBtn {
+  appearance: none;
+  border: 1px solid rgba(165, 28, 48, 0.35);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--crimson);
+}
+
+.hoo-linkedinPromptBtnYes {
+  background: var(--crimson);
+  color: #fff;
+  border-color: rgba(165, 28, 48, 0.95);
+}
+
+.hoo-contactLinkedInHint {
+  position: relative;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  margin-top: 2px;
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 4px;
+  cursor: pointer;
+  color: #0a66c2;
+}
+
+.hoo-contactLinkedInIcon {
+  display: grid;
+  place-items: center;
+}
+
+.hoo-contactLinkedInDot {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #ff6b00;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(255, 107, 0, 0.35);
 }
 
 .hoo-peopleGrid {
